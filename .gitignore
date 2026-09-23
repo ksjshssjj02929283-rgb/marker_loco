@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.DS_Store
+
+# Runtime recordings and generated outputs
+outputs/
+captures/
+*.bag
+*.db3
+*.mp4
+*.avi
+*.mkv
+
+# Local hardware calibration; keep only templates in git
+configs/*_local.json
+configs/*_real.json
+
+# /graphify knowledge-graph output (regenerable)
+graphify-out/

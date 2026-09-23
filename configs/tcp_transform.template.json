@@ -1,0 +1,10 @@
+{
+  "T_reference_TCP": [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0]
+  ],
+  "convention": "T_reference_TCP maps points from the TCP frame into the reference-tag (ID 2) frame: p_ref = T_reference_TCP @ p_tcp. Translation is TCP origin in reference-tag frame, in metres.",
+  "note": "PLACEHOLDER — this is the identity transform. Measure the real tag-to-TCP offset and rotation before use; see TCP_CALIBRATION.md."
+}
