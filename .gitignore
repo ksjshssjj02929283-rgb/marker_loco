@@ -20,3 +20,11 @@ configs/*_real.json
 
 # /graphify knowledge-graph output (regenerable)
 graphify-out/
+
+# Native build files and local validation output
+build/
+build-*/
+*.o
+*.a
+/draft_*_folder/
+/qr_login.png

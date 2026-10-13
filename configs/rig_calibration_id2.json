@@ -1,5 +1,6 @@
 {
   "reference_id": 2,
+  "marker_size_m": 0.048,
   "min_overlap": 60,
   "reachable_ids": [
     2,
