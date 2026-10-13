@@ -1,6 +1,0 @@
-numpy>=1.23,<3
-opencv-contrib-python>=4.8,<5
-scipy>=1.9,<2
-
-# Optional D455 capture and live dashboard:
-# pyrealsense2>=2.50,<3

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "marker-6dof-tracking"
 version = "0.1.0"
-description = "Multi-face ArUco to relative 6DoF tracking with D455 and live 3D visualization"
+description = "D455 multi-face ArUco relative 6DoF tracking algorithms with JSON output"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
@@ -18,17 +18,11 @@ dependencies = [
 
 [project.optional-dependencies]
 d455 = ["pyrealsense2>=2.50,<3"]
-dev = ["pytest>=7"]
 
 [project.scripts]
 marker-run-video = "marker6dof.cli:run_video"
 marker-build-relative = "marker6dof.cli:build_relative"
-marker-record-d455 = "marker6dof.cli:record_d455"
-marker-live-dashboard = "marker6dof.cli:live_dashboard"
+marker-track-d455 = "marker6dof.cli:track_d455"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]

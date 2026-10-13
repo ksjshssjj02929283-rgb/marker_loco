@@ -21,9 +21,5 @@ def build_relative() -> None:
     _run("build_relative_trajectory.py")
 
 
-def record_d455() -> None:
-    _run("record_d455.py")
-
-
-def live_dashboard() -> None:
-    _run("live_dashboard.py")
+def track_d455() -> None:
+    _run("track_d455.py")
