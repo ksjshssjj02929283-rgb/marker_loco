@@ -1,0 +1,8 @@
+SDK: dfmarker
+Version: @PROJECT_VERSION@
+Architecture: @CMAKE_SYSTEM_PROCESSOR@
+OpenCV: @OpenCV_VERSION@
+Compiler: @CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@
+Build type: @CMAKE_BUILD_TYPE@
+ROS: OFF
+SDK RealSense dependency: OFF

@@ -24,6 +24,7 @@ graphify-out/
 # Native build files and local validation output
 build/
 build-*/
+build_arm/
 *.o
 *.a
 /draft_*_folder/

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "units": "m",
+  "description": "Synthetic camera example: replace camera parameters before real use",
+  "camera": {
+    "image_width": 640,
+    "image_height": 480,
+    "camera_matrix": [[620.0, 0.0, 319.5], [0.0, 620.0, 239.5], [0.0, 0.0, 1.0]],
+    "distortion": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "distortion_model": "none"
+  },
+  "rig_file": "rig_calibration_id2.json",
+  "marker_size_m": 0.048,
+  "aruco": {"dictionary": "DICT_4X4_50"},
+  "quality": {"max_error_px": 2.5, "min_edge_px": 24.0}
+}
