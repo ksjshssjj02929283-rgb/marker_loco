@@ -1,5 +1,7 @@
 # 文档索引
 
+先按 [版本与分支](versions.md) 选择代码线；本目录为当前 Python 完整版文档。初版、C++ 与 SDK 的运行入口以对应分支 README 为准。
+
 新用户从 [项目 README](../README.md) 开始；了解代码职责和依赖边界请读 [架构说明](architecture.md)，修改项目请读 [开发指南](../CONTRIBUTING.md)。
 
 ## 使用与开发

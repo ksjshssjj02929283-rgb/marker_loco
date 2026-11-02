@@ -1,0 +1,10 @@
+{
+  "organized_on": "2026-11-02",
+  "branch": "main",
+  "source_ref": "feat/t265-dual-camera-support",
+  "source_commit": "db3086bed7ade38ded63cd05d0a61b02e8980716",
+  "published_code_baseline": "5ec62111cbe6754c297478510f41220a822db273",
+  "includes_source_working_tree_changes": true,
+  "code_changes_during_documentation_cleanup": false,
+  "equivalent_branch_at_publication": "feat/t265-dual-camera-support"
+}

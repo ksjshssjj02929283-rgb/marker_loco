@@ -1,6 +1,28 @@
 # Marker 6DoF Tracking
 
+版本：**当前 Python 完整版 / T265 功能线**；当前分支：`main` / `feat/t265-dual-camera-support`。
+
+[全部版本与选择指南](docs/versions.md) · [源码来源](docs/version_source.json) · [本次验证](docs/validation.md)
+
 Python 算法仓库：从多面 ArUco 刚体的图像观测估计相机坐标系下的相对 6DoF 轨迹。支持离线视频、RealSense D455 RGB-D、T265 双鱼眼，以及浏览器实时可视化。
+
+## 版本选择
+
+| 分支 | 版本定位 | 核心能力 |
+| --- | --- | --- |
+| [`main`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/main) | 当前 Python 完整版 / 默认入口 | D455、T265、RGB-D、回放、评估与浏览器面板 |
+| [`feat/t265-dual-camera-support`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/feat/t265-dual-camera-support) | Python 功能开发线 | 当前与 main 使用同一代码快照；后续设备功能开发从这里继续 |
+| [`release/d455-initial`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/release/d455-initial) | D455 Python 初版 | 48 mm 多面 ArUco、录制、相对轨迹、浏览器 3D |
+| [`release/d455-algorithm`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/release/d455-algorithm) | 精简 Python 算法版 | 保留检测、联合 PnP、门控、JSON 跟踪与刚体标定 |
+| [`release/d455-cpp`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/release/d455-cpp) | C++17 独立工具版 | 离线回放、D455 实时输入、刚体标定、核心测试 |
+| [`dev/library`](https://github.com/ksjshssjj02929283-rgb/marker_loco/tree/dev/library) | C SDK 开发版 | libdfmarker.so、C API、C++ 示例、原生/Orin 构建脚本 |
+
+首次获取：
+
+```bash
+git clone https://github.com/ksjshssjj02929283-rgb/marker_loco.git
+cd marker_loco
+```
 
 ## 算法流程
 
@@ -47,6 +69,7 @@ marker-run-video --help
 marker-record-d455 --help
 marker-record-t265 --help
 marker-live-dashboard --help
+marker-live-dual-t265 --help
 marker-replay-d455 --help
 ```
 
@@ -73,6 +96,7 @@ local/                本机文档草稿与研究评估脚本（Git 忽略）
 
 ## 文档
 
+- [版本与分支](docs/versions.md)：初版、Python 精简版、C++、SDK 与当前开发线。
 - [文档索引](docs/README.md)：按任务查找运行说明、SOP 与实验记录。
 - [算法管线](docs/pipeline.md)：坐标约定和处理阶段。
 - [D455 运行参考](docs/d455_runtime_reference.md)：采集、重放、实时面板和 RGB-D。
