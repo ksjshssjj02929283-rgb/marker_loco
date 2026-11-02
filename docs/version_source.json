@@ -1,0 +1,11 @@
+{
+  "organized_on": "2026-11-02",
+  "branch": "release/d455-cpp",
+  "source_ref": "release/d455-cpp",
+  "source_commit": "76a6a172cf6946f0bcc9fe72fca9e0c2c6806d18",
+  "published_code_baseline": "76a6a172cf6946f0bcc9fe72fca9e0c2c6806d18",
+  "includes_source_working_tree_changes": false,
+  "code_changes_during_documentation_cleanup": true,
+  "equivalent_branch_at_publication": null,
+  "changes_after_source": "CMake selects aruco below OpenCV 4.7, objdetect otherwise; algorithm source unchanged."
+}

@@ -1,10 +1,16 @@
 # D455 多面 ArUco 6DoF 算法（C++）
 
+版本：**D455 C++17 工具**；当前分支：`release/d455-cpp`。
+
+[全部版本与选择指南](docs/versions.md) · [源码来源](docs/version_source.json) · [本次验证](docs/validation.md)
+
 从初始版本 `faad044` 移植的 C++17 算法：ArUco 检测、单面 IPPE、多面角点联合 PnP、刚体标定、位姿质量门控和分段相对轨迹。只保留算法、运行入口、必要配置与核心测试。
+
+源码已包含新旧 ArUco API 的兼容路径；本次将 CMake 的模块选择与该路径对齐，算法源码保持来源版本。
 
 ## 编译
 
-依赖 OpenCV 4.8+（推荐已验证的 4.14，需 objdetect、videoio 及 FFmpeg 解码）、nlohmann_json 3.2+、CMake 3.16+。D455 实时输入还需原生 librealsense2 SDK；离线回放不需要相机或 Python。
+依赖 OpenCV 4.5.4+（4.5/4.6 使用 aruco，4.7+ 使用 objdetect，视频回放还需 videoio 及相应解码器）、nlohmann_json 3.2+、CMake 3.16+。D455 实时输入还需原生 librealsense2 SDK；离线回放不需要相机或 Python。
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=/path/to/opencv/lib/cmake/opencv4
