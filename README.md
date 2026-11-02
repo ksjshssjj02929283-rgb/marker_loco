@@ -1,5 +1,9 @@
 # dfmarker：多面 ArUco 6DoF C SDK
 
+版本：**dfmarker C SDK 开发版**；当前分支：`dev/library`。
+
+[全部版本与选择指南](docs/versions.md) · [源码来源](docs/version_source.json) · [本次验证](docs/validation.md)
+
 C++17 实现 ArUco 检测、单面 IPPE、多面角点联合 PnP、位姿质量门控及分段相对轨迹。公开 `dfmarker_*` C API 和 `libdfmarker.so`，调用方负责图像采集、视频解码和保存。SDK 不依赖 ROS 或 RealSense；原有 D455、TCP 定位和 rig 标定工具可选构建。
 
 ## 编译和安装
@@ -80,7 +84,7 @@ build/cpp-example/sdk_smoke configs/sdk_demo.json
 build/cpp-example/video_demo /path/to/sdk_config.json /path/to/video.mp4
 ```
 
-纯 C 示例使用 demo 的 640x480 配置，验证生命周期和无 Tag 时的回调。C++ smoke 生成 ID 2 图像，验证位姿和丢失。C++ 示例共享 OpenCV，使用 SDK 导出的 `dfmarker_OPENCV_VERSION` 选择一致版本；video_demo 另需 OpenCV highgui 和 calib3d。验证脚本迁移安装前缀后独立构建示例，检查导出符号、运行库、SONAME 和安装配置，日志保存在 `build/native/validation/`。
+来源提交遗漏的 `examples/c_api/` 已在本次整理中补齐，验证脚本也固定工具输出语言以兼容中文系统；C11 示例使用 demo 的 640x480 配置验证生命周期和无 Tag 回调。C++ smoke 生成 ID 2 图像，验证位姿和丢失。C++ 示例共享 OpenCV，使用 SDK 导出的 `dfmarker_OPENCV_VERSION` 选择一致版本；video_demo 另需 OpenCV highgui 和 calib3d。验证脚本迁移安装前缀后独立构建 C/C++ 示例，并检查导出符号、运行库、SONAME 和安装配置；本次实际结果见验证记录。
 
 ### PC 视频可视化验证
 
@@ -91,7 +95,7 @@ build/cpp-example/video_demo /path/to/sdk_config.json /path/to/video.mp4
 对完整离线测试包，可直接读取包内 rig、录制内参和真实逐帧时间戳：
 
 ```bash
-PACKAGE="/home/dex/Projects/DexForce/d455_cpp_76a6a17_offline_test/test_package_76a6a17"
+PACKAGE="/path/to/test_package_76a6a17"
 
 ./build/cpp-example/video_demo --package "$PACKAGE" \
   --session fast_20260924_163142
@@ -122,9 +126,8 @@ mkdir -p outputs/pc_fast_20260924_163142
 
 ```bash
 ./scripts/build_orin.sh
-python3 scripts/validate_sdk.py --platform orin
-# 若使用已登录的 SSH 复用会话：
-python3 scripts/validate_sdk.py --platform orin --ssh-control /tmp/dfmarker-orin-ssh
+# 需要 Orin 工具链、sysroot 和可访问的板端；本次未执行板端验证：
+# python3 scripts/validate_sdk.py --platform orin
 ```
 
 复用 `../Dependence` 下的 GNU 11.3.1 工具链和 `orin-nx-sysroot/opencv48`；可通过 DFMARKER_TOOLCHAIN_ROOT、DFMARKER_SYSROOT、DFMARKER_DEPENDENCE_ROOT 和 DFMARKER_OUTPUT_DIR 覆盖路径。输出为 `build/orin/install/` 和 `build/orin/dfmarker-0.1.0-aarch64.tar.gz`，包内记录 sysroot manifest。
@@ -162,4 +165,4 @@ cmake --build build/tools --parallel 2
 
 `rig_calibration_id2.json` 对应原始 48 mm 多面 Marker；更换尺寸或刚体几何需重新标定。`demo_calibration.json` 仅作配置格式示例，不能用作真实内参。历史录制与验证产物只保留在本地。
 
-历史 48 mm D455 录制验证为 834 帧完整回放、833 帧接受（99.88%），各帧状态与使用标签与初版 Python 一致。当前 SDK 测试覆盖原有 9 组算法测试、输入/生命周期/异常处理、合成图像检测至位姿回调及外部 C/C++ 调用。合成数据验证接口和算法行为，不作为实机精度报告。
+历史 48 mm D455 录制验证为 834 帧完整回放、833 帧接受（99.88%），各帧状态与使用标签与初版 Python 一致。SDK 包含原有算法测试、输入/生命周期/异常处理与合成图像位姿回调测试；本次实际验证范围及未完成项见验证记录。合成数据验证接口和算法行为，不作为实机精度报告。

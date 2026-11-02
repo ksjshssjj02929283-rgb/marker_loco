@@ -15,7 +15,8 @@ DEPENDENCE = PROJECT.parent / 'Dependence'
 def run(*args, capture=False):
     print('+', shlex.join(map(str, args)), flush=True)
     return subprocess.run(list(map(str, args)), check=True, text=True,
-                          stdout=subprocess.PIPE if capture else None).stdout
+                          stdout=subprocess.PIPE if capture else None,
+                          env={**os.environ, 'LC_ALL': 'C'}).stdout
 
 
 def main():

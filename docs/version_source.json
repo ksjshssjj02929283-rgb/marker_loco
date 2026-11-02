@@ -1,0 +1,11 @@
+{
+  "organized_on": "2026-11-02",
+  "branch": "dev/library",
+  "source_ref": "gitlab/dev/library",
+  "source_commit": "10635115f137c421c4bb5e06550e13979af7dabe",
+  "published_code_baseline": "10635115f137c421c4bb5e06550e13979af7dabe",
+  "includes_source_working_tree_changes": false,
+  "code_changes_during_documentation_cleanup": true,
+  "equivalent_branch_at_publication": null,
+  "changes_after_source": "Restore missing C11 consumer example and its CMake configuration; SDK and algorithm implementation unchanged. Force C locale for parsed ELF tool output in SDK validation."
+}

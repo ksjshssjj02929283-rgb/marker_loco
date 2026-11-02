@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(dfmarker_c_consumer LANGUAGES C)
+find_package(dfmarker 0.1 CONFIG REQUIRED)
+add_executable(c_api_smoke main.c)
+set_target_properties(c_api_smoke PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES)
+target_link_libraries(c_api_smoke PRIVATE dfmarker::dfmarker)
