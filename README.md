@@ -1,5 +1,9 @@
 # Marker 6DoF Tracking
 
+版本：**D455 Python 初版**；当前分支：`release/d455-initial`。
+
+[全部版本与选择指南](docs/versions.md) · [源码来源](docs/version_source.json) · [本次验证](docs/validation.md)
+
 从 48 mm 多面 ArUco Marker 到 D455 相机坐标系下的相对 6DoF 轨迹，并提供实时浏览器 3D 可视化。
 
 ```text
@@ -22,14 +26,14 @@ ArUco 角点（亚像素细化）
 实时 3D 轨迹与姿态坐标轴
 ```
 
-本目录是可独立上传 GitHub 的主项目。原始调研文档、录制数据和大体积媒体仍保留在上级工作区，不会被打包进这个可复现仓库。
+本分支保留 48 mm D455 初始 Python 工程。后续 T265、RGB-D 和 C++/SDK 功能见版本导航；录制数据和大体积媒体由使用者另行提供。
 
 ## 1. 快速开始
 
 建议 Python 3.10+：
 
 ```bash
-cd marker_6dof_tracking
+cd marker_loco
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev,d455]"
@@ -66,7 +70,7 @@ python -m pip install -e ".[d455]"
 
 ```bash
 marker-record-d455 \
-  --serial 353522302024 \
+  --serial <D455序列号> \
   --marker-size-mm 48 \
   --ids 2,3,4,5 \
   --duration 30 \
@@ -97,7 +101,7 @@ python scripts/replay_d455.py \
 
 ```bash
 marker-live-dashboard \
-  --serial 353522302024 \
+  --serial <D455序列号> \
   --marker-size-mm 48 \
   --rig outputs/captures/YYYYMMDD_HHMMSS/rig_calibration_id2.json \
   --port 8765

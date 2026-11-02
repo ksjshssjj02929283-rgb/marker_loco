@@ -1,0 +1,10 @@
+{
+  "organized_on": "2026-11-02",
+  "branch": "release/d455-initial",
+  "source_ref": "release/d455-initial",
+  "source_commit": "faad044195304dec08681228faf26e35c56b7848",
+  "published_code_baseline": "faad044195304dec08681228faf26e35c56b7848",
+  "includes_source_working_tree_changes": false,
+  "code_changes_during_documentation_cleanup": false,
+  "equivalent_branch_at_publication": null
+}
