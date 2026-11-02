@@ -1,0 +1,16 @@
+# Kalibr calibration supplied for the 2026-10-30 UMI stereo cameras.
+# The replay pipeline uses cam0 and cam1 independently for monocular PnP.
+cam0:
+  camera_model: pinhole
+  distortion_model: equidistant
+  distortion_coeffs: [-0.04227072, 0.01086145, -0.01410186, 0.00405435]
+  intrinsics: [834.92068779, 834.5196822, 929.07919729, 585.1562388]
+  resolution: [1920, 1080]
+  rostopic: /umi_l/sensor/cam_uvc_l/compressed
+cam1:
+  camera_model: pinhole
+  distortion_model: equidistant
+  distortion_coeffs: [-0.03523133, -0.00846293, 0.00478187, -0.00207974]
+  intrinsics: [825.33511961, 825.30373256, 929.84659768, 531.14801893]
+  resolution: [1920, 1080]
+  rostopic: /umi_l/sensor/cam_uvc_r/compressed

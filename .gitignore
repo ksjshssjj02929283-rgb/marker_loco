@@ -1,0 +1,50 @@
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+build/
+dist/
+.DS_Store
+.claude/settings.local.json
+/.aws/
+/.codex/
+
+# Runtime recordings and generated outputs
+outputs/
+captures/
+*.bag
+*.db3
+*.mp4
+*.avi
+*.mkv
+*.mcap
+*.larkcache.linco
+*.log
+
+# Local research and publication workspaces
+/local/
+
+# Local calibration overrides; versioned reproduction baselines stay tracked
+/configs/local/
+configs/*_local.json
+configs/*_real.json
+
+# Independent local checkouts, not dependencies or submodules of this project
+/.analysis_upstreams/
+/ego_umi_slam/
+
+# /graphify knowledge-graph output (regenerable)
+graphify-out/
+
+# Local login QR images
+/qr_login.png
+
+# Local publication drafts
+/draft_*_folder/

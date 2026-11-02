@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "units": "m",
+  "source": "Onshape UMI Gripper Assembly",
+  "reference_tag_id": 2,
+  "T_reference_TCP": [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0]
+  ],
+  "convention": "T_reference_TCP maps points from the TCP frame into the reference-tag (ID 2) frame: p_ref = T_reference_TCP @ p_tcp. Translation is TCP origin in reference-tag frame, in metres.",
+  "cad_frame": "Record the Onshape connector/origin used for the TCP and how it was aligned to ArUco ID 2.",
+  "tcp_definition": "Record the physical TCP origin and +X/+Y/+Z directions here.",
+  "note": "PLACEHOLDER — identity is unsafe for a real gripper. Replace it with measured CAD geometry and validate the projected axes on a static RGB frame."
+}

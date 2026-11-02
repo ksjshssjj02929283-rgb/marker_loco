@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "description": "SYNTHETIC DEMO ONLY - replace every geometric value before real deployment",
+  "units": "m",
+  "image_width": 640,
+  "image_height": 480,
+  "camera_matrix": [
+    [620.0, 0.0, 319.5],
+    [0.0, 620.0, 239.5],
+    [0.0, 0.0, 1.0]
+  ],
+  "distortion": [0.0, 0.0, 0.0, 0.0, 0.0],
+  "aruco": {
+    "dictionary": "DICT_4X4_50"
+  },
+  "quality": {
+    "min_markers": 2,
+    "min_inlier_corners": 6,
+    "ransac_threshold_px": 3.0,
+    "ransac_confidence": 0.999,
+    "ransac_iterations": 150,
+    "max_reprojection_rmse_px": 2.5,
+    "max_reprojection_error_px": 6.0
+  },
+  "bodies": {
+    "demo_gripper": {
+      "tag_corners_gripper_m": {
+        "2": [
+          [-0.070, -0.030, 0.000],
+          [-0.020, -0.030, 0.000],
+          [-0.020, 0.020, 0.000],
+          [-0.070, 0.020, 0.000]
+        ],
+        "3": [
+          [0.020, -0.030, 0.000],
+          [0.070, -0.030, 0.000],
+          [0.070, 0.020, 0.000],
+          [0.020, 0.020, 0.000]
+        ],
+        "4": [
+          [0.080, -0.030, 0.055],
+          [0.080, -0.030, 0.005],
+          [0.080, 0.020, 0.005],
+          [0.080, 0.020, 0.055]
+        ]
+      },
+      "T_gripper_tcp": [
+        [1.0, 0.0, 0.0, 0.000],
+        [0.0, 1.0, 0.0, 0.090],
+        [0.0, 0.0, 1.0, 0.040],
+        [0.0, 0.0, 0.0, 1.000]
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "units": "m",
+  "source": "Physical estimate: TCP is 320 mm behind reference tag ID 2",
+  "reference_tag_id": 2,
+  "T_reference_TCP": [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, -0.3200],
+    [0.0, 0.0, 0.0, 1.0]
+  ],
+  "convention": "T_reference_TCP maps points from the TCP frame into the reference-tag (ID 2) frame: p_ref = T_reference_TCP @ p_tcp. Translation is TCP origin in reference-tag frame, in metres.",
+  "tcp_definition": "TCP axes are assumed aligned with reference marker ID 2; TCP origin is 320 mm along ID 2 -Z (the back side).",
+  "note": "Physical estimate for live visualization. Validate the projected TCP origin and XYZ axes before relying on it for measurement or control."
+}

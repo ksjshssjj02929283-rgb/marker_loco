@@ -1,0 +1,19 @@
+# Normalize source and documentation line endings across platforms.
+* text=auto eol=lf
+
+# Treat common images, arrays, and recordings as binary data.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.npy binary
+*.npz binary
+*.bag binary
+*.db3 binary
+*.mcap binary
+*.mp4 binary
+*.avi binary
+*.mkv binary

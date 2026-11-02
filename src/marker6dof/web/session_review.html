@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>D455 会话回放</title>
+<style>
+  :root { color-scheme: dark; --bg:#091015; --panel:#101b22; --line:#233641; --mint:#76e4c3; --orange:#ffbc88; --muted:#91a5b4; }
+  * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:#e9f1f5; font:14px system-ui,-apple-system,"Noto Sans CJK SC",sans-serif; }
+  main { width:min(1500px,calc(100% - 40px)); margin:28px auto; } header { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:18px; }
+  h1 { margin:0; font-size:28px; } header p { margin:6px 0 0; color:var(--muted); } .pill { color:var(--mint); border:1px solid #285147; background:#102c27; padding:7px 11px; border-radius:7px; white-space:nowrap; }
+  .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; } .metric,.card { background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+  .metric { padding:14px; } .metric span { display:block; color:var(--muted); font-size:12px; } .metric strong { display:block; margin-top:5px; font-size:22px; color:var(--mint); }
+  .top { display:grid; grid-template-columns:1.22fr .78fr; gap:14px; } .card { padding:14px; } .label { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:10px; }
+  video { width:100%; max-height:510px; object-fit:contain; background:#000; border-radius:6px; display:block; } #trajectory { width:100%; height:440px; background:#0b141a; border-radius:6px; display:block; }
+  .views { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:14px; } canvas { width:100%; height:250px; background:#0b141a; border-radius:6px; display:block; }
+  .note { margin-top:14px; color:var(--muted); font-size:12px; line-height:1.6; } code { color:#b9d5e3; }
+  @media (max-width:900px) { .top{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.views{grid-template-columns:1fr} }
+</style>
+</head>
+<body><main>
+  <header><div><h1>夹爪末端 TCP：整段会话同步回放</h1><p id="subtitle">加载中…</p></div><div class="pill" id="status">离线会话</div></header>
+  <section class="metrics"><div class="metric"><span>回放时间</span><strong id="time">—</strong></div><div class="metric"><span>轨迹点</span><strong id="points">—</strong></div><div class="metric"><span>当前状态</span><strong id="quality">—</strong></div><div class="metric"><span>重投影误差</span><strong id="error">—</strong></div></section>
+  <section class="top"><article class="card"><div class="label"><b>真实 D455 标注视频</b><span>逐帧驱动下方轨迹</span></div><video id="video" controls preload="metadata" src="/annotated.mp4"></video></article><article class="card"><div class="label"><b>3D 风格总览（XY 投影）</b><span id="range">—</span></div><canvas id="trajectory"></canvas></article></section>
+  <section class="views"><article class="card"><div class="label"><b>XY / 正视</b><span>mm</span></div><canvas id="xy"></canvas></article><article class="card"><div class="label"><b>XZ / 俯视</b><span>mm</span></div><canvas id="xz"></canvas></article><article class="card"><div class="label"><b>YZ / 侧视</b><span>mm</span></div><canvas id="yz"></canvas></article></section>
+  <p class="note">视频来自 <code>annotated.mp4</code>，轨迹来自同一会话的 <code>live_poses.csv</code>。二者以记录的 <code>frame_index</code> 逐帧联动累积；轨迹仍是相对首个有效 TCP 位姿，不能解读为绝对世界坐标或独立精度真值。</p>
+</main><script>
+const $=id=>document.getElementById(id); let state, start, current=[];
+function fmt(v,n=1){return Number.isFinite(v)?v.toFixed(n):'—'}
+function resize(canvas){const r=canvas.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.round(r.width*d),h=Math.round(r.height*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}const c=canvas.getContext('2d');c.setTransform(d,0,0,d,0,0);return [c,r.width,r.height]}
+function draw(canvas,a,b){const [c,w,h]=resize(canvas),pad={l:42,r:14,t:14,b:30},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b; c.fillStyle='#0b141a';c.fillRect(0,0,w,h); const points=current.length?current:[{smooth:[0,0,0]}];const va=points.map(p=>p.smooth[a]),vb=points.map(p=>p.smooth[b]);va.push(0);vb.push(0);const minA=Math.min(...va),maxA=Math.max(...va),minB=Math.min(...vb),maxB=Math.max(...vb);const span=Math.max(maxA-minA,maxB-minB,.04)*1.25,cx=(minA+maxA)/2,cy=(minB+maxB)/2; const p=v=>[pad.l+pw/2+(v[a]-cx)/span*Math.min(pw,ph),pad.t+ph/2-(v[b]-cy)/span*Math.min(pw,ph)];c.strokeStyle='#263944';c.lineWidth=1;for(let i=0;i<5;i++){let x=pad.l+i*pw/4,y=pad.t+i*ph/4;c.beginPath();c.moveTo(x,pad.t);c.lineTo(x,h-pad.b);c.stroke();c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke()} c.save();c.beginPath();c.rect(pad.l,pad.t,pw,ph);c.clip();for(let i=1;i<current.length;i++){if(current[i].segment!==current[i-1].segment)continue;c.strokeStyle=current[i].quality==='MULTI'?'#76e4c3':'#ffbc88';c.lineWidth=current[i].quality==='MULTI'?2.5:2;c.beginPath();c.moveTo(...p(current[i-1].smooth));c.lineTo(...p(current[i].smooth));c.stroke()} if(current.length){c.fillStyle='#e8f0f7';c.beginPath();c.arc(...p(current[0].smooth),3.5,0,Math.PI*2);c.fill();c.fillStyle=current.at(-1).quality==='MULTI'?'#76e4c3':'#ffbc88';c.beginPath();c.arc(...p(current.at(-1).smooth),5,0,Math.PI*2);c.fill()}c.restore();return [span,cx,cy]}
+function update(){const v=$('video'),time=v.currentTime||0,frame=Math.floor(time*state.frame_rate_hz+1e-6);current=state.trace.filter(p=>p.frame_index<=frame); if(!current.length&&state.trace.length)current=[state.trace[0]]; const point=current.at(-1);$('time').textContent=`${fmt(time,1)} / ${fmt(v.duration,1)} s`;$('points').textContent=`${current.length} / ${state.trace.length}`;$('quality').textContent=point.quality;$('error').textContent=`${fmt(state.reprojection_error_px,2)} px`;const [span]=draw($('trajectory'),0,1);draw($('xy'),0,1);draw($('xz'),0,2);draw($('yz'),1,2);$('range').textContent=`显示范围约 ${fmt(span*1000)} mm`}
+fetch('/state').then(r=>r.json()).then(data=>{state=data;start=state.trace[0].t;$('subtitle').textContent=`${state.trajectory_name} · ${state.trace.length} 个有效点 · 保留原始分段`;$('video').addEventListener('timeupdate',update);$('video').addEventListener('loadedmetadata',update);window.addEventListener('resize',update);update()});
+</script></body></html>

@@ -1,0 +1,20 @@
+# 外部真值交接清单；当前仓库尚未实现自动读取或配对。
+# 复制到 outputs/accuracy_test/<TEST_ID>/ground_truth/ground_truth_manifest.yaml
+# 项目历史静态激光数据没有逐帧时间戳和姿态，只能做点间相对距离评估，不能直接填成 D 级绝对真值。
+# 正式 D 级测试需要带时间戳的真值，并固定目标点、坐标变换和配对窗口。
+provider: null  # robot | mocap | laser_tracker | linear_stage
+truth_file: ground_truth.csv
+truth_frame: null  # camera | world；非 camera 时必须提供 transform_to_camera
+truth_target: null  # 真值追踪的实体/点，需与估计的 tag 对齐
+truth_timestamp_column: timestamp_ns
+truth_timestamp_unit: ns
+truth_position_columns: [tx_m, ty_m, tz_m]
+truth_orientation_columns: null  # 有姿态真值时填 [qx, qy, qz, qw]
+estimate_file: null  # 例如 captures/accuracy/<TEST_ID>/<SCENE>/<TIMESTAMP>/poses.csv
+estimate_tag_id: null
+estimate_timestamp_column: host_timestamp_s
+estimate_timestamp_unit: s
+time_offset_ns: null  # 真值时间戳加此偏移后转入估计时钟；未标定时留空
+max_time_delta_ms: null  # 采集前确定的最大允许配对时间差
+transform_to_camera: null  # T_camera_truth，非 camera 坐标系时填写实测 4x4 矩阵
+target_alignment_file: null  # 真值目标与估计 tag 不同时填写实测外参文件

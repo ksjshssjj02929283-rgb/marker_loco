@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "units": "m",
+  "source": "pivot calibration from captures/d455_aruco/pivot/20261013_101117/poses.csv (tag 2, 1468 frames)",
+  "reference_tag_id": 2,
+  "T_reference_TCP": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.005095015249185133
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      -0.02557986333291168
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      -0.3096535114961713
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "convention": "T_reference_TCP maps points from the TCP frame into the reference-tag (ID 2) frame: p_ref = T_reference_TCP @ p_tcp.",
+  "tcp_definition": "TCP point from pivot calibration; rotation is identity placeholder pending CAD/physical axis measurement.",
+  "residual_rmse_mm": 19.409683764018848
+}

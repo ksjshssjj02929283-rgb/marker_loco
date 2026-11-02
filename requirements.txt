@@ -1,0 +1,3 @@
+# Compatibility entry: run from the repository root.
+# Dependency versions are maintained only in pyproject.toml.
+.

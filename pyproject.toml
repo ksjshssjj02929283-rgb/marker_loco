@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marker-6dof-tracking"
+version = "0.1.0"
+description = "Multi-face ArUco to relative 6DoF tracking with D455 and live 3D visualization"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "Dex"}]
+dependencies = [
+  "numpy>=1.23,<3",
+  "opencv-contrib-python-headless>=4.8,<5",
+  "scipy>=1.9,<2",
+]
+
+[project.optional-dependencies]
+d455 = ["pyrealsense2>=2.50,<3"]
+realsense = ["pyrealsense2>=2.50,<2.54"]
+t265 = ["pyrealsense2>=2.50,<2.54"]
+dev = ["pytest>=7", "setuptools>=68", "wheel"]
+reporting = ["matplotlib>=3.6,<4", "Pillow>=9,<13", "imageio-ffmpeg>=0.6,<1"]
+rosbag = ["PyYAML>=6,<7", "rosbags>=0.10,<0.12"]
+
+[project.scripts]
+marker-run-video = "marker6dof.cli:run_video"
+marker-build-relative = "marker6dof.cli:build_relative"
+marker-record-d455 = "marker6dof.cli:record_d455"
+marker-record-t265 = "marker6dof.cli:record_t265"
+marker-live-dashboard = "marker6dof.cli:live_dashboard"
+marker-live-dual-t265 = "marker6dof.commands.tracking.live_dual_t265:main"
+marker-generate-demo = "marker6dof.commands.demo.generate_demo:main"
+marker-evaluate-demo = "marker6dof.commands.demo.evaluate_demo:main"
+marker-replay-d455 = "marker6dof.commands.replay.replay_d455:main"
+marker-replay-rgbd = "marker6dof.commands.replay.replay_rgbd:main"
+marker-replay-sensor-bag = "marker6dof.commands.replay.replay_sensor_bag:main"
+marker-replay-dashboard = "marker6dof.commands.replay.replay_dashboard_session:main"
+marker-pivot-tcp = "marker6dof.commands.calibration.pivot_tcp_calibration:main"
+marker-cad-tcp = "marker6dof.commands.calibration.cad_tcp_from_step:main"
+marker-eval-displacement = "marker6dof.commands.evaluation.eval_known_displacement:main"
+marker-eval-static-noise = "marker6dof.commands.evaluation.eval_static_noise:main"
+marker-eval-tape-static = "marker6dof.commands.evaluation.eval_tape_static_accuracy:main"
+marker-eval-tape-stops = "marker6dof.commands.evaluation.eval_tape_continuous_stops:main"
+marker-eval-sensor-stops = "marker6dof.commands.evaluation.eval_sensor_stops:main"
+marker-compare-tcp-smoothing = "marker6dof.commands.evaluation.compare_tcp_smoothing:main"
+marker-render-smoothing-comparison = "marker6dof.commands.reporting.render_smoothing_comparison:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"marker6dof.web" = ["*.html"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

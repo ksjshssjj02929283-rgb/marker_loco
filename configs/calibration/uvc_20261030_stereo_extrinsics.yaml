@@ -1,0 +1,6 @@
+# Kalibr sensor_capture_1027_1-results-cam.txt, matching uvc_20261030_camchain.yaml.
+# T_1_0 maps coordinates in cam0 (left) into cam1 (right).
+T_1_0:
+  quaternion_xyzw: [0.00070121, -0.00063618, -0.00186418, 0.99999781]
+  translation_m: [-0.08711653, 0.00051678, 0.00005623]
+source: /home/dex/下载/sensor_capture_1027_1-results-cam.txt

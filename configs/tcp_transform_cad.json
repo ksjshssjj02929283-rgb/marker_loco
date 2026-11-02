@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "units": "m",
+  "source": "Onshape STEP vis_assembly.step (id2 face +y)",
+  "reference_tag_id": 2,
+  "T_reference_TCP": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      -0.00028455284552844975
+    ],
+    [
+      0.0,
+      0.0,
+      -1.0,
+      0.0307
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.21358381110137487
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "convention": "T_reference_TCP maps points from the TCP frame into the reference-tag (ID 2) frame: p_ref = T_reference_TCP @ p_tcp.",
+  "tcp_definition": "Fingertip-pad midpoint from STEP geometry. Marker frame convention: +Z is the outward face normal, sticker 'up' is assembly +Z, +X points right. Validate the projected TCP axes on a static RGB frame before use.",
+  "cad_geometry_mm": {
+    "cube_center": [
+      0.0,
+      -60.1,
+      28.5
+    ],
+    "tcp": [
+      -0.3,
+      200.9,
+      -2.2
+    ],
+    "id2_center": [
+      0.0,
+      -12.7,
+      28.5
+    ]
+  }
+}

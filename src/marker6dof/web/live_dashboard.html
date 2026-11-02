@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1014">
+  <title>Marker 6DoF · 实时位姿工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1014'/%3E%3Cpath d='m16 5 10 6v11l-10 6-10-6V11zM6 11l10 6 10-6M16 17v11' fill='none' stroke='%237de2c0' stroke-width='2'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1014; --panel: #121a20; --inset: #0e151b; --line: #263139;
+      --text: #e8eff2; --muted: #94a5ae; --accent: #7de2c0;
+      --multi: #7de2c0; --single: #f2bc61; --warn: #ffab70; --lost: #ff7885;
+      --x: #ff8790; --y: #7de2ad; --z: #7eb8ff;
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: 13px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); color: var(--text); }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button, .pill { white-space: nowrap; }
+    button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; background: #19232b; transition: background .15s, border-color .15s; }
+    button:hover { background: #24323b; border-color: #536873; }
+    button:disabled { cursor: wait; opacity: .55; }
+    button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .primary { color: #0d251e; background: var(--accent); border-color: var(--accent); font-weight: 650; }
+    .primary:hover { background: #a3efd6; border-color: #a3efd6; }
+    .secondary { background: transparent; }
+    .app-header { height: 64px; padding: 0 28px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand-icon { width: 33px; height: 33px; padding: 5px; color: var(--accent); background: #173029; border: 1px solid #2e5346; border-radius: 8px; }
+    .brand-name { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+    .brand-name em { font-style: normal; font-weight: 400; color: var(--muted); }
+    .brand-subtitle { margin-left: 16px; padding-left: 20px; border-left: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .connection { color: var(--muted); display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    main { max-width: 1920px; margin: auto; padding: 24px 28px 16px; }
+    .intro { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 21px; }
+    .eyebrow { color: var(--accent); font: 10px/1.4 ui-monospace, monospace; letter-spacing: .17em; margin: 0 0 5px; }
+    h1 { font-size: 23px; font-weight: 650; letter-spacing: -.03em; margin: 0; }
+    .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    #rawToggle[aria-pressed="true"] { border-color: #416458; background: #192c26; color: #b1ecd6; }
+    .summary-grid { display: grid; grid-template-columns: 1.2fr repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .summary-card { min-width: 0; padding: 14px 17px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
+    .label { color: var(--muted); font-size: 11px; margin: 0 0 8px; }
+    .summary-bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .metric-number { font: 500 24px/1.15 ui-monospace, "SFMono-Regular", Consolas, monospace; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+    .metric-unit { color: var(--muted); font-size: 11px; }
+    .metric-note { color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .pill { color: var(--muted); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) 276px; gap: 14px; align-items: start; }
+    .surface { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .panel-head { min-height: 56px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); }
+    h2, h3 { margin: 0; font-size: 12px; font-weight: 600; }
+    .panel-index { color: #6c828d; font: 10px ui-monospace, monospace; margin-right: 8px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font: 10px ui-monospace, monospace; color: var(--muted); }
+    .camera-wrap { height: 300px; background: #080d11; position: relative; display: flex; align-items: center; justify-content: center; }
+    #camera { display: block; width: 100%; height: 100%; object-fit: contain; }
+    #camera:not([src]) { visibility: hidden; }
+    .camera-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--muted); background: #0d141a; text-align: center; padding: 24px; }
+    .camera-empty[hidden] { display: none; }
+    .camera-empty svg { width: 36px; height: 36px; color: #56716e; margin-bottom: 5px; }
+    .camera-empty strong { font-size: 13px; color: #c6d4db; font-weight: 500; }
+    .camera-empty span { font-size: 11px; line-height: 1.7; }
+    .camera-caption { position: absolute; bottom: 11px; left: 12px; color: #cad9df; background: #081015d9; border: 1px solid #40535e88; border-radius: 5px; padding: 5px 8px; font: 10px ui-monospace, monospace; }
+    .panel-foot { min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 14px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--line); }
+    .space-wrap { position: relative; }
+    canvas { display: block; width: 100%; height: 202px; }
+    #space { height: 300px; cursor: grab; touch-action: none; }
+    #space.dragging { cursor: grabbing; }
+    .view-controls { display: flex; gap: 2px; background: #0b1217; border: 1px solid var(--line); padding: 2px; border-radius: 6px; }
+    .view-controls button { min-height: 24px; min-width: 29px; padding: 3px 6px; font: 10px ui-monospace, monospace; background: transparent; border: 0; border-radius: 3px; color: var(--muted); }
+    .view-controls button[aria-pressed="true"] { color: var(--accent); background: #233b32; }
+    .icon-button { padding: 4px; min-height: 25px; min-width: 25px; background: transparent; border-color: transparent; }
+    .axis-key { display: flex; gap: 9px; font: 10px ui-monospace, monospace; }
+    .axis-x { color: var(--x); } .axis-y { color: var(--y); } .axis-z { color: var(--z); }
+    .telemetry { grid-column: 3; grid-row: 1 / 3; display: flex; flex-direction: column; gap: 14px; }
+    .panel-body { padding: 15px; }
+    .readout-heading { display: flex; align-items: baseline; justify-content: space-between; color: #c4d2d9; font-size: 11px; margin-bottom: 10px; }
+    .readout-heading small { color: var(--muted); font-size: 10px; }
+    .axis-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 20px; gap: 7px; }
+    .axis-value { min-width: 0; padding: 9px 7px; border: 1px solid var(--line); background: var(--inset); border-radius: 6px; }
+    .axis-value span { display: block; font: 10px ui-monospace, monospace; margin-bottom: 8px; }
+    .axis-value b { display: block; color: var(--text); font: 500 17px ui-monospace, Consolas, monospace; letter-spacing: -.06em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .pose-note { font-size: 10px; color: var(--muted); line-height: 1.7; margin: -7px 0 16px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag { display: inline-flex; justify-content: center; padding: 6px 9px; border: 1px solid #34434b; border-radius: 5px; color: #81959f; font: 11px ui-monospace, monospace; background: var(--inset); }
+    .tag.visible { color: #e3eaf0; border-color: #8399a3; }
+    .tag.used { color: #b8f0dc; border-color: #3d7b63; background: #1b392e; }
+    .tag.rejected { color: var(--warn); border-style: dashed; border-color: #8b654c; }
+    .tag-note { margin: 9px 0 0; font-size: 10px; color: var(--muted); }
+    .reason { padding: 11px 14px; margin: 0; color: #b9cad2; background: var(--inset); font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; border-top: 1px solid var(--line); }
+    .scale-stats { display: flex; flex-direction: column; }
+    .scale-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 0; border-bottom: 1px solid #233039; }
+    .scale-row:first-child { padding-top: 0; } .scale-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .scale-row span { color: var(--muted); font-size: 11px; }
+    .scale-row b { font: 12px ui-monospace, monospace; text-align: right; }
+    .scale-highlight b { color: var(--accent); font-size: 16px; }
+    .tcp-info { margin: 15px 0 0; border-top: 1px solid var(--line); padding-top: 12px; }
+    .tcp-info summary { cursor: pointer; color: var(--muted); font-size: 11px; }
+    #tcpPosition { display: block; margin-top: 10px; color: #d8e5eb; font: 11px/1.7 ui-monospace, monospace; }
+    .projection-section { grid-column: 1 / 3; }
+    .section-caption { margin: 3px 0 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .section-caption span { color: var(--muted); font-size: 10px; }
+    .plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .plot-head { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 13px 13px 9px; }
+    .plot-head strong { font: 600 11px ui-monospace, monospace; } .plot-head > span { font-size: 10px; color: var(--muted); }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 10px; }
+    .legend span::before { content: ""; display: inline-block; width: 13px; height: 2px; margin: 0 5px 3px 0; background: var(--multi); }
+    .legend .single::before { background: var(--single); } .legend .ego::before { background: var(--z); } .legend .raw::before { height: 0; border-top: 1px dashed #97aab8; background: none; }
+    .legend .raw.disabled { opacity: .35; }
+    .workspace-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding-top: 15px; font-size: 10px; color: #8397a2; }
+    .trace-info { display: flex; gap: 14px; font: 10px ui-monospace, monospace; }
+    .trace-info b { color: #cedce2; font-weight: 500; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 5; max-width: calc(100vw - 32px); padding: 12px 18px; border: 1px solid #557368; border-radius: 8px; box-shadow: 0 8px 32px #0008; background: #1c3028; color: #d6f3e7; font-size: 12px; }
+    .toast[data-error="true"] { background: #38232a; border-color: #85505b; color: #ffccd1; }
+    dialog { width: min(430px, calc(100vw - 32px)); padding: 24px; color: var(--text); background: var(--panel); border: 1px solid #40545e; border-radius: 12px; box-shadow: 0 24px 80px #0008; }
+    dialog::backdrop { background: #02080cbf; backdrop-filter: blur(4px); }
+    dialog h2 { font-size: 18px; } dialog p { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 14px 0 24px; }
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    @media (min-width: 1650px) { .workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) 310px; } .camera-wrap, #space { height: 360px; } canvas { height: 235px; } .axis-value b { font-size: 19px; } }
+    @media (max-width: 1150px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .telemetry { grid-column: 1 / 3; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+      .brand-subtitle { display: none; } .camera-wrap, #space { height: 285px; }
+    }
+    @media (max-width: 720px) {
+      .app-header { height: 58px; padding: 0 16px; } main { padding: 20px 16px; }
+      .intro { align-items: flex-start; flex-direction: column; gap: 16px; } h1 { font-size: 22px; }
+      .toolbar { width: 100%; } .toolbar button { min-height: 40px; flex: 1; }
+      .summary-grid { grid-template-columns: 1fr 1fr; gap: 9px; } .summary-card { padding: 13px; }
+      .summary-card:first-child { grid-column: 1 / -1; }
+      .summary-bottom { gap: 5px; } .metric-note { display: none; }
+      .workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .telemetry { grid-column: 1; grid-row: auto; grid-template-columns: 1fr; }
+      .projection-section { grid-column: 1; } .plots { grid-template-columns: 1fr; gap: 10px; }
+      .camera-wrap, #space { height: 290px; } canvas { height: 225px; }
+      .view-controls button { min-height: 30px; min-width: 32px; }
+      .workspace-footer { flex-direction: column; align-items: flex-start; } .legend { gap: 10px; }
+      .axis-value b { font-size: 21px; } .axis-value { padding: 11px; }
+      .brand-name { font-size: 15px; } .connection { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>
+      <div class="brand-name">MARKER <em>/ 6DoF</em></div>
+      <span class="brand-subtitle">RealSense · 多面 ArUco 跟踪</span>
+    </div>
+    <div class="connection" id="connection" role="status"><i class="dot"></i><span id="connectionText">正在连接</span></div>
+  </header>
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">LIVE TRACKING WORKSPACE</p><h1>实时位姿工作台</h1><p class="subtitle">多面联合定位 · 相对 6DoF 轨迹 · 姿态可视化</p></div>
+      <div class="toolbar">
+        <button id="rawToggle" class="secondary" type="button" aria-pressed="true" title="显示或隐藏原始观测细线"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2 13 4-5 4 4 4-8 4 3"/></svg>原始轨迹<span id="rawState">已显示</span></button>
+        <button id="reset" class="primary" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7a6.5 6.5 0 1 1-.5 5M4 3v4h4"/></svg>重置原点</button>
+      </div>
+    </div>
+    <section class="summary-grid" aria-label="实时跟踪概况">
+      <div class="summary-card"><p class="label">跟踪状态</p><div class="summary-bottom"><div class="pill" id="status" role="status">等待启动</div><span class="metric-note" id="statusCode">STARTING</span></div></div>
+      <div class="summary-card"><p class="label">重投影误差 <span class="metric-unit">/ px</span></p><div class="summary-bottom"><span class="metric-number" id="error">—</span><span class="metric-note">当前接受位姿</span></div></div>
+      <div class="summary-card"><p class="label">采用 Marker <span class="metric-unit">/ 已标定</span></p><div class="summary-bottom"><span class="metric-number" id="markerCount">—</span><span class="metric-note" id="visibleCount">等待检测</span></div></div>
+    </section>
+    <div class="workspace">
+      <section class="surface" aria-labelledby="cameraTitle">
+        <div class="panel-head"><h2 id="cameraTitle"><span class="panel-index">01</span>相机画面</h2><span class="badge" id="videoStatus">等待视频</span></div>
+        <div class="camera-wrap">
+          <img id="camera" alt="RealSense 实时检测画面">
+          <div class="camera-empty" id="cameraEmpty">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="3" y="8" width="26" height="19" rx="4"/><path d="m10 8 2-4h8l2 4"/><circle cx="16" cy="17" r="6"/></svg>
+            <strong id="cameraEmptyTitle">等待相机画面</strong><span id="cameraEmptyHint">相机就绪后，检测画面将在这里显示</span>
+          </div>
+          <div class="camera-caption" id="cameraMeta">等待视频流</div>
+        </div>
+        <div class="panel-foot"><span>检测角点 · 刚体姿态叠加</span><span id="tcpBadge">TCP 未启用</span></div>
+      </section>
+      <section class="surface" aria-labelledby="spaceTitle">
+        <div class="panel-head"><h2 id="spaceTitle"><span class="panel-index">02</span><span id="trajectoryTitle">空间轨迹</span></h2><div class="view-controls" role="group" aria-label="空间视角"><button type="button" data-view="3d" aria-pressed="true" title="三维视角">3D</button><button type="button" data-view="xy" aria-pressed="false" title="XY 平面视角">XY</button><button type="button" data-view="xz" aria-pressed="false" title="XZ 平面视角">XZ</button><button type="button" data-view="yz" aria-pressed="false" title="YZ 平面视角">YZ</button></div></div>
+        <div class="space-wrap"><canvas id="space" tabindex="0" role="img" aria-label="相对 6DoF 空间轨迹，可拖动旋转、滚轮缩放，或使用方向键、加减键和 Home 键" aria-describedby="spaceHelp"></canvas></div>
+        <div class="panel-foot"><span id="spaceScale">单位 mm</span><div class="axis-key"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div><button id="viewReset" class="icon-button" type="button" title="重置视角与缩放 (Home)" aria-label="重置视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4m6 0h4v4m0 6v4h-4m-6 0H3v-4"/></svg></button></div>
+      </section>
+      <aside class="telemetry" aria-label="位姿与尺度读数">
+        <section class="surface">
+          <div class="panel-head"><h2><span class="panel-index">03</span>实时位姿</h2><span class="badge" id="poseState">等待测量</span></div>
+          <div class="panel-body">
+            <div class="readout-heading">相对位置 <small>mm</small></div>
+            <div class="axis-values" id="position"><div class="axis-value axis-x"><span>X</span><b id="posX">—</b></div><div class="axis-value axis-y"><span>Y</span><b id="posY">—</b></div><div class="axis-value axis-z"><span>Z</span><b id="posZ">—</b></div></div>
+            <div class="readout-heading">相对姿态 <small>deg</small></div>
+            <div class="axis-values" id="orientation"><div class="axis-value axis-x"><span>ROLL</span><b id="rotX">—</b></div><div class="axis-value axis-y"><span>PITCH</span><b id="rotY">—</b></div><div class="axis-value axis-z"><span>YAW</span><b id="rotZ">—</b></div></div>
+            <p class="pose-note" id="trajectoryNote">相对首个有效刚体位姿 · 平滑显示</p>
+            <div class="readout-heading">标定 Marker <small id="tagSummary">—</small></div>
+            <div class="tags" id="tags"></div><p class="tag-note">绿色 采用 · 描边 可见 · 虚线 拒绝</p>
+            <details class="tcp-info" id="tcpDetails" hidden><summary>TCP 位置（平滑） · 相机坐标系 / mm</summary><span id="tcpPosition">—</span></details>
+          </div>
+          <p class="reason" id="reason" role="status">正在启动相机</p>
+        </section>
+        <section class="surface">
+          <div class="panel-head"><h2>运动尺度</h2><span class="badge">保留轨迹范围</span></div>
+          <div class="panel-body scale-stats">
+            <div class="scale-row scale-highlight"><span>当前位移 |Δ|</span><b id="dispMag">—</b></div>
+            <div class="scale-row"><span>峰值位移</span><b id="peakMag">—</b></div>
+            <div class="scale-row"><span>X / Y / Z 极差</span><b><span id="rangeX">—</span> / <span id="rangeY">—</span> / <span id="rangeZ">—</span> mm</b></div>
+            <div class="scale-row"><span>累计行程 · 段内</span><b id="pathLen">—</b></div>
+          </div>
+        </section>
+      </aside>
+      <section class="projection-section" aria-label="轨迹平面投影">
+        <div class="section-caption"><h2>正交投影</h2><span id="projectionCaption">平滑轨迹 · 独立自适应视野</span></div>
+        <div class="plots">
+          <div class="surface"><div class="plot-head"><strong><span class="axis-x">X</span><span class="axis-y">Y</span> / 正视</strong><span id="xyScale">—</span></div><canvas id="xy" role="img" aria-label="XY 平面轨迹，单位毫米"></canvas></div>
+          <div class="surface"><div class="plot-head"><strong><span class="axis-x">X</span><span class="axis-z">Z</span> / 俯视</strong><span id="xzScale">—</span></div><canvas id="xz" role="img" aria-label="XZ 平面轨迹，单位毫米"></canvas></div>
+          <div class="surface"><div class="plot-head"><strong><span class="axis-y">Y</span><span class="axis-z">Z</span> / 侧视</strong><span id="yzScale">—</span></div><canvas id="yz" role="img" aria-label="YZ 平面轨迹，单位毫米"></canvas></div>
+        </div>
+      </section>
+    </div>
+    <footer class="workspace-footer"><div class="legend"><span>多面 / 双目</span><span class="single">单面</span><span class="ego">Ego 相机（VIO）</span><span class="raw" id="rawLegend">原始观测</span></div><span id="spaceHelp">拖动旋转 · 滚轮缩放 · 失锁区间不连线</span><div class="trace-info"><span>轨迹点 <b id="points">0</b></span><span>当前段 <b id="segment">0</b></span></div></footer>
+  </main>
+  <dialog id="resetDialog" aria-labelledby="resetTitle" aria-describedby="resetDescription"><h2 id="resetTitle">重新设置轨迹原点？</h2><p id="resetDescription">将清空当前轨迹，并以接下来首个有效刚体位姿建立新原点。已录制的文件会保留。</p><div class="dialog-actions"><button id="cancelReset" type="button" autofocus>取消</button><button id="confirmReset" class="primary" type="button">重置原点</button></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const defaultTagIds = [2, 3, 4, 5];
+    const views = {};
+    let showRaw = true;
+    let lastState = null;
+    let spaceFit = null;
+    let connected = false;
+    let redrawPending = false;
+    let plotsDirty = true;
+    let toastTimer;
+    let imagePending = false;
+    let imageReady = false;
+    let lastImageAttempt = 0;
+    let imageGeneration = 0;
+    let pollTimer;
+    let pollController = null;
+    let tagSignature = '';
+    const spaceCamera = { yaw: -.72, pitch: .46, zoom: 1, dragging: false, x: 0, y: 0 };
+
+    const colors = { MULTI: '#7de2c0', STEREO: '#7de2c0', SINGLE: '#f2bc61', WARN: '#ffab70', LOST: '#ff7885', ERROR: '#ff7885', DISCONNECTED: '#ff7885', STARTING: '#94a5ae' };
+    const statusLabels = { MULTI: '多面联合定位', STEREO: '双目联合定位', SINGLE: '单面定位', WARN: '位姿未接受', LOST: '目标已失锁', ERROR: '相机异常', DISCONNECTED: '连接中断', STARTING: '等待启动' };
+    const isJoint = quality => quality === 'MULTI' || quality === 'STEREO';
+    const traceColor = quality => colors[quality] || colors.STARTING;
+    const format = (value, digits = 1) => value == null || !Number.isFinite(Number(value)) ? '—' : Number(value).toFixed(digits);
+    const niceStep = raw => {
+      const power = 10 ** Math.floor(Math.log10(Math.max(raw, 1e-6)));
+      const value = raw / power;
+      return (value <= 1 ? 1 : value <= 2 ? 2 : value <= 5 ? 5 : 10) * power;
+    };
+    const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+    const fmtMm = metres => metres == null ? '—' : `${(metres * 1000).toFixed(1)} mm`;
+
+    function scaleStats(trace) {
+      const min = [0, 0, 0], max = [0, 0, 0];
+      let peak = 0, path = 0, previous = null;
+      for (const point of trace) {
+        const p = point.smooth;
+        peak = Math.max(peak, Math.hypot(p[0], p[1], p[2]));
+        for (let axis = 0; axis < 3; axis++) { min[axis] = Math.min(min[axis], p[axis]); max[axis] = Math.max(max[axis], p[axis]); }
+        if (previous && previous.segment === point.segment) path += Math.hypot(...p.map((value, axis) => value - previous.smooth[axis]));
+        previous = point;
+      }
+      const current = trace.length ? trace[trace.length - 1].smooth : null;
+      return {
+        mag: current ? Math.hypot(current[0], current[1], current[2]) : null,
+        peak,
+        range: [0, 1, 2].map(axis => max[axis] - min[axis]),
+        path,
+      };
+    }
+
+    function quaternionToEuler(quaternion) {
+      if (!quaternion) return null;
+      const [x, y, z, w] = quaternion;
+      const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+      const pitchTerm = clamp(2 * (w * y - z * x), -1, 1);
+      const pitch = Math.asin(pitchTerm);
+      const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+      return [roll, pitch, yaw].map(value => value * 180 / Math.PI);
+    }
+
+    function rotateVector(quaternion, vector) {
+      const [qx, qy, qz, qw] = quaternion || [0, 0, 0, 1];
+      const [vx, vy, vz] = vector;
+      const tx = 2 * (qy * vz - qz * vy);
+      const ty = 2 * (qz * vx - qx * vz);
+      const tz = 2 * (qx * vy - qy * vx);
+      return [
+        vx + qw * tx + qy * tz - qz * ty,
+        vy + qw * ty + qz * tx - qx * tz,
+        vz + qw * tz + qx * ty - qy * tx,
+      ];
+    }
+
+    function updateSpaceFit(trace, egoTrace = []) {
+      const points = [...trace, ...egoTrace].map(point => point.smooth);
+      points.push([0, 0, 0]);
+      const mins = [0, 1, 2].map(axis => Math.min(...points.map(point => point[axis])));
+      const maxs = [0, 1, 2].map(axis => Math.max(...points.map(point => point[axis])));
+      const center = mins.map((value, axis) => (value + maxs[axis]) / 2);
+      const span = Math.max(...mins.map((value, axis) => maxs[axis] - value), .06);
+      if (!spaceFit) spaceFit = { center: [...center], span };
+      const expanding = span > spaceFit.span * 1.02;
+      const alpha = expanding ? .32 : .025;
+      spaceFit.center = spaceFit.center.map((value, axis) => value + (center[axis] - value) * alpha);
+      spaceFit.span += (span - spaceFit.span) * (expanding ? .4 : .012);
+      spaceFit.span = Math.max(spaceFit.span, span * .985, .06);
+      return spaceFit;
+    }
+
+    function drawSpace(trace, egoTrace = []) {
+      const canvas = $('space');
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const pixelW = Math.max(1, Math.round(rect.width * dpr)), pixelH = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== pixelW || canvas.height !== pixelH) { canvas.width = pixelW; canvas.height = pixelH; }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const width = rect.width, height = rect.height;
+      ctx.fillStyle = '#0e171d'; ctx.fillRect(0, 0, width, height);
+      const fit = updateSpaceFit(trace, egoTrace);
+      const scale = Math.min(width, height) / (fit.span * 1.55) * spaceCamera.zoom;
+      const project = point => {
+        const dx = point[0] - fit.center[0], dy = point[1] - fit.center[1], dz = point[2] - fit.center[2];
+        const cy = Math.cos(spaceCamera.yaw), sy = Math.sin(spaceCamera.yaw);
+        const cp = Math.cos(spaceCamera.pitch), sp = Math.sin(spaceCamera.pitch);
+        const rx = cy * dx - sy * dz;
+        const rz = sy * dx + cy * dz;
+        const ry = cp * dy - sp * rz;
+        return [width * .5 + rx * scale, height * .53 + ry * scale, sp * dy + cp * rz];
+      };
+      const line = (from, to, color, lineWidth = 1, dash = []) => {
+        const a = project(from), b = project(to);
+        ctx.strokeStyle = color; ctx.lineWidth = lineWidth; ctx.setLineDash(dash);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        ctx.setLineDash([]);
+        return b;
+      };
+
+      const step = niceStep(fit.span / 5);
+      const gridRadius = Math.ceil((fit.span * .85 + Math.max(Math.abs(fit.center[0]), Math.abs(fit.center[2]))) / step) * step;
+      for (let value = -gridRadius; value <= gridRadius + step / 2; value += step) {
+        line([-gridRadius, 0, value], [gridRadius, 0, value], 'rgba(70,99,108,.24)');
+        line([value, 0, -gridRadius], [value, 0, gridRadius], 'rgba(70,99,108,.24)');
+      }
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillStyle = 'rgba(150,168,190,.72)';
+      for (let value = -gridRadius; value <= gridRadius + step / 2; value += step) {
+        if (Math.abs(value) < step * .5) continue;
+        const label = String(Math.round(value * 1000));
+        const xTick = project([value, 0, 0]);
+        ctx.fillText(label, xTick[0] + 3, xTick[1] - 3);
+        const zTick = project([0, 0, value]);
+        ctx.fillText(label, zTick[0] + 3, zTick[1] - 3);
+      }
+      const worldAxis = fit.span * .38;
+      const axisColors = ['#ff8790', '#7de2ad', '#7eb8ff'];
+      const basis = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+      basis.forEach((axis, index) => {
+        const end = axis.map(value => value * worldAxis);
+        const screen = line([0, 0, 0], end, `${axisColors[index]}99`, 1.5);
+        ctx.fillStyle = axisColors[index]; ctx.font = '11px ui-monospace, monospace';
+        ctx.fillText(['+X', '+Y', '+Z'][index], screen[0] + 4, screen[1] - 3);
+      });
+
+      if (showRaw && trace.length > 1) {
+        for (let index = 1; index < trace.length; index++) {
+          if (trace[index - 1].segment !== trace[index].segment) continue;
+          line(trace[index - 1].raw, trace[index].raw, 'rgba(135,157,181,.32)', 1, [3, 4]);
+        }
+      }
+      for (let index = 1; index < egoTrace.length; index++) {
+        const before = egoTrace[index - 1], point = egoTrace[index];
+        if (before.segment !== point.segment) continue;
+        line(before.smooth, point.smooth, 'rgba(126,184,255,.88)', 2, [5, 3]);
+      }
+      for (let index = 1; index < trace.length; index++) {
+        const before = trace[index - 1], point = trace[index];
+        if (before.segment !== point.segment) continue;
+        line(before.smooth, point.smooth, traceColor(point.quality),
+             isJoint(point.quality) ? 2.8 : 2.1);
+      }
+
+      const drawFrame = (point, length, alpha, labels = false) => {
+        const origin = point.smooth;
+        const quaternion = point.q_smooth || [0, 0, 0, 1];
+        basis.forEach((axis, index) => {
+          const direction = rotateVector(quaternion, axis);
+          const end = origin.map((value, component) => value + direction[component] * length);
+          const color = index === 0 ? `rgba(255,95,104,${alpha})` : index === 1 ? `rgba(85,217,139,${alpha})` : `rgba(92,168,255,${alpha})`;
+          const screen = line(origin, end, color, labels ? 3.2 : 1.3);
+          if (labels) {
+            ctx.fillStyle = axisColors[index]; ctx.font = 'bold 11px ui-monospace, monospace';
+            ctx.fillText(['X', 'Y', 'Z'][index], screen[0] + 4, screen[1] - 4);
+          }
+        });
+      };
+      if (trace.length) {
+        const stride = Math.max(1, Math.floor(trace.length / 14));
+        for (let index = stride; index < trace.length - 1; index += stride) drawFrame(trace[index], fit.span * .035, .34);
+        const first = project(trace[0].smooth);
+        ctx.fillStyle = '#eef4fa'; ctx.beginPath(); ctx.arc(first[0], first[1], 3.5, 0, Math.PI * 2); ctx.fill();
+        const current = trace[trace.length - 1];
+        drawFrame(current, fit.span * .105, 1, true);
+        const currentScreen = project(current.smooth);
+        ctx.fillStyle = traceColor(current.quality); ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(currentScreen[0], currentScreen[1], 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      } else {
+        ctx.fillStyle = '#0e171df2'; ctx.fillRect(width / 2 - 130, height / 2 - 27, 260, 70);
+        ctx.fillStyle = '#b3c7d2'; ctx.font = '13px system-ui, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('等待有效位姿', width / 2, height / 2);
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.fillText('检测到 Marker 后开始绘制轨迹', width / 2, height / 2 + 23);
+        ctx.textAlign = 'start';
+      }
+      if (egoTrace.length) {
+        const ego = project(egoTrace[egoTrace.length - 1].smooth);
+        ctx.fillStyle = '#7eb8ff'; ctx.beginPath(); ctx.arc(ego[0], ego[1], 4, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '10px ui-monospace, monospace'; ctx.fillText('EGO', ego[0] + 7, ego[1] - 6);
+      }
+      const barWorld = step;
+      const barPx = barWorld * scale;
+      const barX = 16, barY = height - 18;
+      ctx.strokeStyle = 'rgba(238,244,250,.92)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(barX, barY); ctx.lineTo(barX + barPx, barY); ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(barX, barY - 6); ctx.lineTo(barX, barY + 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(barX + barPx, barY - 6); ctx.lineTo(barX + barPx, barY + 6); ctx.stroke();
+      ctx.fillStyle = 'rgba(238,244,250,.92)';
+      ctx.font = '11px ui-monospace, monospace';
+      ctx.fillText(`${Math.round(barWorld * 1000)} mm`, barX + barPx + 8, barY + 4);
+      $('spaceScale').textContent = `网格 ${format(step * 1000, step < .001 ? 1 : 0)} mm · ${format(spaceCamera.zoom, 1)}×`;
+      if (trace.length && (!connected || !lastState?.smooth_position_m)) {
+        ctx.fillStyle = '#ffbc88'; ctx.font = '11px system-ui, sans-serif';
+        ctx.fillText('历史轨迹 · 当前无有效位姿', 14, 22);
+      }
+    }
+
+    function updateViewport(key, points, axes, width, height) {
+      if (!points.length) return { cx: 0, cy: 0, unit: .0002 };
+      const valuesA = points.map(point => point.smooth[axes[0]]);
+      const valuesB = points.map(point => point.smooth[axes[1]]);
+      valuesA.push(0); valuesB.push(0);
+      const minA = Math.min(...valuesA), maxA = Math.max(...valuesA);
+      const minB = Math.min(...valuesB), maxB = Math.max(...valuesB);
+      const targetCx = (minA + maxA) / 2, targetCy = (minB + maxB) / 2;
+      const targetUnit = Math.max((maxA - minA) * 1.28 / width, (maxB - minB) * 1.28 / height, .04 / Math.min(width, height));
+      if (!views[key]) views[key] = { cx: targetCx, cy: targetCy, unit: targetUnit };
+      const view = views[key];
+      const centerAlpha = targetUnit > view.unit * 1.02 ? .32 : .06;
+      view.cx += (targetCx - view.cx) * centerAlpha;
+      view.cy += (targetCy - view.cy) * centerAlpha;
+      view.unit += (targetUnit - view.unit) * (targetUnit > view.unit ? .4 : .012);
+      view.unit = Math.max(view.unit, targetUnit * .985);
+      return view;
+    }
+
+    function drawPlot(canvas, scaleLabel, trace, firstAxis, secondAxis) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const pixelW = Math.max(1, Math.round(rect.width * dpr)), pixelH = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== pixelW || canvas.height !== pixelH) { canvas.width = pixelW; canvas.height = pixelH; }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const width = rect.width, height = rect.height, pad = { left: 47, right: 15, top: 16, bottom: 31 };
+      const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+      ctx.fillStyle = '#10181e'; ctx.fillRect(0, 0, width, height);
+      const axes = { x: 0, y: 1, z: 2 };
+      const view = updateViewport(canvas.id, trace, [axes[firstAxis], axes[secondAxis]], plotW, plotH);
+      const project = value => [
+        pad.left + plotW / 2 + (value[axes[firstAxis]] - view.cx) / view.unit,
+        pad.top + plotH / 2 - (value[axes[secondAxis]] - view.cy) / view.unit,
+      ];
+
+      const step = niceStep(view.unit * Math.min(plotW, plotH) / 4);
+      scaleLabel.textContent = `网格 ${format(step * 1000, step < .01 ? 1 : 0)} mm`;
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.lineWidth = 1;
+      const leftValue = view.cx - plotW * view.unit / 2, rightValue = view.cx + plotW * view.unit / 2;
+      const bottomValue = view.cy - plotH * view.unit / 2, topValue = view.cy + plotH * view.unit / 2;
+      ctx.strokeStyle = '#26353d'; ctx.fillStyle = '#8ba0ac';
+      for (let value = Math.ceil(leftValue / step) * step; value <= rightValue; value += step) {
+        const point = [0, 0, 0]; point[axes[firstAxis]] = value;
+        const x = project(point)[0];
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, height - pad.bottom); ctx.stroke();
+        const label = String(Math.round(value * 1000));
+        if (x + 3 + ctx.measureText(label).width < width - 58) ctx.fillText(label, x + 3, height - 12);
+      }
+      for (let value = Math.ceil(bottomValue / step) * step; value <= topValue; value += step) {
+        const point = [0, 0, 0]; point[axes[secondAxis]] = value;
+        const y = project(point)[1];
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+        if (y > pad.top + 22 && y < height - pad.bottom - 2) ctx.fillText(String(Math.round(value * 1000)), 5, y - 4);
+      }
+      const origin = project([0, 0, 0]);
+      ctx.strokeStyle = '#50657b'; ctx.lineWidth = 1.3;
+      if (origin[0] >= pad.left && origin[0] <= width - pad.right) { ctx.beginPath(); ctx.moveTo(origin[0], pad.top); ctx.lineTo(origin[0], height - pad.bottom); ctx.stroke(); }
+      if (origin[1] >= pad.top && origin[1] <= height - pad.bottom) { ctx.beginPath(); ctx.moveTo(pad.left, origin[1]); ctx.lineTo(width - pad.right, origin[1]); ctx.stroke(); }
+
+      ctx.save(); ctx.beginPath(); ctx.rect(pad.left, pad.top, plotW, plotH); ctx.clip();
+      if (showRaw) {
+        ctx.strokeStyle = 'rgba(137, 158, 181, .42)'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+        let previous = null;
+        for (const point of trace) {
+          const xy = project(point.raw);
+          if (!previous || previous.segment !== point.segment) { ctx.beginPath(); ctx.moveTo(...xy); }
+          else { ctx.lineTo(...xy); ctx.stroke(); ctx.beginPath(); ctx.moveTo(...xy); }
+          previous = point;
+        }
+        ctx.setLineDash([]);
+      }
+      for (let index = 1; index < trace.length; index++) {
+        const before = trace[index - 1], point = trace[index];
+        if (before.segment !== point.segment) continue;
+        ctx.strokeStyle = traceColor(point.quality);
+        ctx.lineWidth = isJoint(point.quality) ? 2.6 : 2.0;
+        ctx.beginPath(); ctx.moveTo(...project(before.smooth)); ctx.lineTo(...project(point.smooth)); ctx.stroke();
+      }
+      if (trace.length) {
+        const start = project(trace[0].smooth), current = project(trace[trace.length - 1].smooth);
+        ctx.fillStyle = '#e8f0f7'; ctx.beginPath(); ctx.arc(...start, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = traceColor(trace[trace.length - 1].quality);
+        ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 11;
+        ctx.beginPath(); ctx.arc(...current, 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+      ctx.fillStyle = '#92a4b7'; ctx.font = '11px system-ui, sans-serif';
+      ctx.fillText(`+${firstAxis.toUpperCase()} →`, width - 48, height - 11);
+      ctx.fillText(`+${secondAxis.toUpperCase()} ↑`, 8, pad.top + 12);
+    }
+
+    function requestDraw(spaceOnly = false) {
+      if (spaceOnly !== true) plotsDirty = true;
+      if (redrawPending || document.hidden) return;
+      redrawPending = true;
+      requestAnimationFrame(() => {
+        redrawPending = false;
+        const trace = lastState?.trace || [];
+        const egoTrace = lastState?.ego_trace || [];
+        drawSpace(trace, egoTrace);
+        if (plotsDirty) {
+          drawPlot($('xy'), $('xyScale'), trace, 'x', 'y');
+          drawPlot($('xz'), $('xzScale'), trace, 'x', 'z');
+          drawPlot($('yz'), $('yzScale'), trace, 'y', 'z');
+          plotsDirty = false;
+        }
+      });
+    }
+
+    function toast(message, error = false) {
+      clearTimeout(toastTimer);
+      $('toast').textContent = message;
+      $('toast').dataset.error = String(error);
+      $('toast').hidden = false;
+      toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500);
+    }
+
+    function setText(id, value) {
+      if ($(id).textContent !== value) $(id).textContent = value;
+    }
+
+    function setStatus(code) {
+      setText('status', statusLabels[code] || code);
+      $('status').style.color = colors[code] || colors.STARTING;
+      $('statusCode').textContent = code;
+    }
+
+    function renderPose(state, live) {
+      const position = live ? state.smooth_position_m : null;
+      const euler = live ? quaternionToEuler(state.smooth_quaternion_xyzw) : null;
+      ['X', 'Y', 'Z'].forEach((axis, index) => {
+        const signed = value => `${value > 0 ? '+' : ''}${format(value)}`;
+        $('pos' + axis).textContent = position ? signed(position[index] * 1000) : '—';
+        $('rot' + axis).textContent = euler ? signed(euler[index]) : '—';
+      });
+      $('dispMag').textContent = position ? fmtMm(Math.hypot(...position)) : '—';
+      $('poseState').textContent = position ? '平滑输出' : '暂无有效位姿';
+      $('poseState').style.color = position ? colors.MULTI : colors.STARTING;
+      const tcpPosition = state.smooth_tcp_camera_position_m || state.tcp_camera_position_m;
+      $('tcpPosition').textContent = live && tcpPosition
+        ? tcpPosition.map((value, index) => `${['X', 'Y', 'Z'][index]} ${format(value * 1000)} mm`).join(' · ')
+        : '暂无有效 TCP 位姿';
+    }
+
+    function renderTags(state, live) {
+      const ids = state.calibrated_ids || defaultTagIds;
+      const visible = live ? state.visible_ids || [] : [];
+      const used = live ? state.used_ids || [] : [];
+      const rejected = live ? state.rejected_ids || [] : [];
+      const signature = JSON.stringify([ids, visible, used, rejected]);
+      if (signature === tagSignature) return;
+      tagSignature = signature;
+      $('tags').replaceChildren(...ids.map(id => {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        if (visible.includes(id)) tag.classList.add('visible');
+        if (rejected.includes(id)) tag.classList.add('rejected');
+        if (used.includes(id)) { tag.classList.add('used'); tag.classList.remove('rejected'); }
+        tag.textContent = `ID ${id}`;
+        tag.title = `ID ${id} · ${used.includes(id) ? '本帧采用' : rejected.includes(id) ? '本帧拒绝' : visible.includes(id) ? '可见，未采用' : '未检测到'}`;
+        return tag;
+      }));
+    }
+
+    function render(state) {
+      const displayTrace = state.trace || [];
+      lastState = { ...state, trace: displayTrace };
+      const live = connected && !['ERROR', 'STARTING'].includes(state.status);
+      const used = live ? state.used_ids || [] : [];
+      const visible = live ? state.visible_ids || [] : [];
+      setStatus(state.status || 'STARTING');
+      setText('reason', state.reason || '等待跟踪数据');
+      renderPose(state, live);
+      $('error').textContent = live && state.smooth_position_m ? format(state.reprojection_error_px, 2) : '—';
+      $('points').textContent = displayTrace.length;
+      $('segment').textContent = state.segment || 0;
+      const calibrated = state.calibrated_ids || defaultTagIds;
+      $('markerCount').textContent = live ? `${used.length} / ${calibrated.length}` : `— / ${calibrated.length}`;
+      $('visibleCount').textContent = live ? `${visible.length} 个可见` : '等待检测';
+      $('tagSummary').textContent = `${calibrated.length} 个已标定`;
+      $('cameraMeta').textContent = live ? (state.camera || 'RealSense') : '等待有效视频流';
+      const stats = scaleStats(lastState.trace);
+      const hasTrace = lastState.trace.length > 0;
+      $('peakMag').textContent = hasTrace ? fmtMm(stats.peak) : '—';
+      ['X', 'Y', 'Z'].forEach((axis, index) => { $('range' + axis).textContent = hasTrace ? format(stats.range[index] * 1000) : '—'; });
+      $('pathLen').textContent = hasTrace ? (stats.path >= 1 ? `${stats.path.toFixed(2)} m` : fmtMm(stats.path)) : '—';
+      $('tcpBadge').textContent = state.tcp_transform_loaded ? 'CAD TCP 已启用' : 'TCP 未启用';
+      $('tcpBadge').style.color = state.tcp_transform_loaded ? colors.MULTI : colors.STARTING;
+      $('tcpDetails').hidden = !state.tcp_transform_loaded;
+      const trajectoryName = state.trajectory_name || '参考 Marker 相对轨迹';
+      $('trajectoryTitle').textContent = trajectoryName;
+      $('trajectoryNote').textContent = `${trajectoryName} · 相对首个有效位姿 · 平滑显示`;
+      $('projectionCaption').textContent = `${trajectoryName} · 独立自适应视野`;
+      renderTags(state, live);
+      updateCameraPlaceholder();
+      requestDraw();
+    }
+
+    function updateCameraPlaceholder() {
+      const error = lastState?.status === 'ERROR';
+      const starting = !lastState || lastState.status === 'STARTING';
+      const unavailable = !connected || error || starting || !imageReady;
+      $('cameraEmpty').hidden = !unavailable;
+      $('cameraEmptyTitle').textContent = !connected ? '等待服务连接' : error ? '相机暂不可用' : '等待相机画面';
+      $('cameraEmptyHint').textContent = !connected ? '连接恢复后将自动更新画面' : error ? '请查看跟踪状态中的异常说明' : '相机就绪后，检测画面将在这里显示';
+      $('videoStatus').textContent = !connected ? '离线' : error ? '相机异常' : !imageReady || starting ? '等待视频' : '实时画面';
+      $('videoStatus').style.color = unavailable ? colors.STARTING : colors.MULTI;
+    }
+
+    // Preload one frame at a time so slower image responses cannot be cancelled by polling.
+    function refreshImage() {
+      if (imagePending || document.hidden || !connected || ['ERROR', 'STARTING'].includes(lastState?.status)) return;
+      const now = performance.now();
+      if (!imageReady && now - lastImageAttempt < 1000) return;
+      lastImageAttempt = now;
+      imagePending = true;
+      const generation = imageGeneration;
+      const frame = new Image();
+      let timer;
+      const finish = success => {
+        clearTimeout(timer);
+        frame.onload = frame.onerror = null;
+        imagePending = false;
+        if (generation !== imageGeneration) return;
+        imageReady = success;
+        if (success && connected) $('camera').src = frame.src;
+        updateCameraPlaceholder();
+      };
+      frame.onload = () => finish(true);
+      frame.onerror = () => finish(false);
+      timer = setTimeout(() => { finish(false); frame.src = ''; }, 4000);
+      frame.src = `/image.jpg?t=${Date.now()}`;
+    }
+
+    function disconnect() {
+      connected = false;
+      imageReady = false;
+      imageGeneration++;
+      setStatus('DISCONNECTED');
+      setText('connectionText', '连接中断 · 重试中');
+      $('connection').style.color = colors.LOST;
+      setText('reason', '实时服务连接中断，正在自动重试。历史轨迹已保留。');
+      renderPose(lastState || {}, false);
+      renderTags(lastState || {}, false);
+      $('error').textContent = '—';
+      $('markerCount').textContent = '—';
+      $('visibleCount').textContent = '等待连接';
+      $('cameraMeta').textContent = '连接中断';
+      updateCameraPlaceholder();
+      requestDraw();
+    }
+
+    async function update() {
+      clearTimeout(pollTimer);
+      if (document.hidden || pollController) return;
+      pollController = new AbortController();
+      const started = performance.now();
+      const timeout = setTimeout(() => pollController?.abort(), 3500);
+      try {
+        const response = await fetch('/state', { cache: 'no-store', signal: pollController.signal });
+        if (!response.ok) throw new Error(`state ${response.status}`);
+        const state = await response.json();
+        if (!state || typeof state.status !== 'string' || !Array.isArray(state.trace)) throw new Error('invalid state');
+        connected = true;
+        setText('connectionText', '服务已连接');
+        $('connection').style.color = colors.MULTI;
+        render(state);
+        refreshImage();
+      } catch (error) {
+        disconnect();
+      } finally {
+        clearTimeout(timeout);
+        pollController = null;
+        if (!document.hidden) pollTimer = setTimeout(update, connected ? Math.max(20, 100 - (performance.now() - started)) : 1000);
+      }
+    }
+
+    $('rawToggle').addEventListener('click', () => {
+      showRaw = !showRaw;
+      $('rawToggle').setAttribute('aria-pressed', String(showRaw));
+      $('rawState').textContent = showRaw ? '已显示' : '已隐藏';
+      $('rawLegend').classList.toggle('disabled', !showRaw);
+      requestDraw();
+    });
+    $('reset').addEventListener('click', () => $('resetDialog').showModal());
+    $('cancelReset').addEventListener('click', () => $('resetDialog').close());
+    $('confirmReset').addEventListener('click', async () => {
+      $('confirmReset').disabled = true;
+      $('reset').disabled = true;
+      $('confirmReset').textContent = '正在重置…';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      try {
+        const response = await fetch('/reset', { method: 'POST', signal: controller.signal });
+        if (!response.ok) throw new Error(`reset ${response.status}`);
+        Object.keys(views).forEach(key => delete views[key]);
+        spaceFit = null;
+        $('resetDialog').close();
+        toast('重置请求已发送，等待下一帧建立新原点');
+        requestDraw();
+      } catch (error) {
+        $('resetDialog').close();
+        toast('重置未确认，请检查连接后重试', true);
+      } finally {
+        clearTimeout(timeout);
+        $('confirmReset').disabled = false;
+        $('reset').disabled = false;
+        $('confirmReset').textContent = '重置原点';
+      }
+    });
+
+    function markView(name) {
+      document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === name)));
+    }
+    function resetView(name = '3d') {
+      const presets = { '3d': [-.72, .46], xy: [0, 0], xz: [0, Math.PI / 2], yz: [-Math.PI / 2, 0] };
+      const [yaw, pitch] = presets[name];
+      Object.assign(spaceCamera, { yaw, pitch, zoom: 1, dragging: false });
+      spaceFit = null;
+      markView(name);
+      requestDraw(true);
+    }
+    document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => resetView(button.dataset.view)));
+    const spaceCanvas = $('space');
+    spaceCanvas.addEventListener('pointerdown', event => {
+      if (event.button !== 0) return;
+      spaceCanvas.focus({ preventScroll: true });
+      spaceCamera.dragging = true; spaceCamera.x = event.clientX; spaceCamera.y = event.clientY;
+      spaceCanvas.classList.add('dragging'); spaceCanvas.setPointerCapture(event.pointerId);
+    });
+    spaceCanvas.addEventListener('pointermove', event => {
+      if (!spaceCamera.dragging) return;
+      spaceCamera.yaw += (event.clientX - spaceCamera.x) * .008;
+      spaceCamera.pitch = clamp(spaceCamera.pitch + (event.clientY - spaceCamera.y) * .008, -Math.PI / 2, Math.PI / 2);
+      spaceCamera.x = event.clientX; spaceCamera.y = event.clientY;
+      markView('');
+      requestDraw(true);
+    });
+    const endSpaceDrag = event => {
+      spaceCamera.dragging = false; spaceCanvas.classList.remove('dragging');
+      if (event.pointerId != null && spaceCanvas.hasPointerCapture(event.pointerId)) spaceCanvas.releasePointerCapture(event.pointerId);
+    };
+    spaceCanvas.addEventListener('pointerup', endSpaceDrag);
+    spaceCanvas.addEventListener('pointercancel', endSpaceDrag);
+    spaceCanvas.addEventListener('lostpointercapture', endSpaceDrag);
+    spaceCanvas.addEventListener('wheel', event => {
+      event.preventDefault();
+      spaceCamera.zoom = clamp(spaceCamera.zoom * Math.exp(-event.deltaY * .001), .35, 4);
+      requestDraw(true);
+    }, { passive: false });
+    spaceCanvas.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', 'Home'].includes(event.key)) return;
+      event.preventDefault();
+      if (event.key === 'Home') { resetView(); return; }
+      if (event.key === 'ArrowLeft') spaceCamera.yaw -= .1;
+      if (event.key === 'ArrowRight') spaceCamera.yaw += .1;
+      if (event.key === 'ArrowUp') spaceCamera.pitch = clamp(spaceCamera.pitch - .1, -Math.PI / 2, Math.PI / 2);
+      if (event.key === 'ArrowDown') spaceCamera.pitch = clamp(spaceCamera.pitch + .1, -Math.PI / 2, Math.PI / 2);
+      if (event.key === '+' || event.key === '=') spaceCamera.zoom = clamp(spaceCamera.zoom * 1.1, .35, 4);
+      if (event.key === '-') spaceCamera.zoom = clamp(spaceCamera.zoom / 1.1, .35, 4);
+      if (event.key.startsWith('Arrow')) markView('');
+      requestDraw(true);
+    });
+    $('viewReset').addEventListener('click', () => resetView());
+    new ResizeObserver(requestDraw).observe(document.querySelector('.workspace'));
+    window.addEventListener('resize', requestDraw);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearTimeout(pollTimer);
+      else { requestDraw(); update(); }
+    });
+    renderTags({}, false);
+    requestDraw();
+    update();
+
+  </script>
+</body>
+</html>
