@@ -1,0 +1,10 @@
+{
+  "organized_on": "2026-11-02",
+  "branch": "release/d455-algorithm",
+  "source_ref": "release/d455-algorithm",
+  "source_commit": "4ccf770be7b9fb17713066cb1c2fa35417456673",
+  "published_code_baseline": "4ccf770be7b9fb17713066cb1c2fa35417456673",
+  "includes_source_working_tree_changes": false,
+  "code_changes_during_documentation_cleanup": false,
+  "equivalent_branch_at_publication": null
+}
